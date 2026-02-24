@@ -1,19 +1,3 @@
-// import express from "express";
-// import {
-//   getProductById,
-//   // getProductsByCategory,
-//   addProductReview,
-// } from "../controllers/productController.js";
-
-// const router = express.Router();
-
-// // router.get("/", getProductsByCategory);
-// router.get("/:id", getProductById);
-// router.post("/:id/reviews", addProductReview);
-
-// export default router;
-
-
 import express from "express";
 import {
   getAllProducts,
@@ -28,7 +12,9 @@ import { upload } from "../middleware/uploadMiddleware.js";
 const router = express.Router();
 
 router.get("/", getAllProducts);
+
 router.get("/:id", getProductById);
+
 router.post(
   "/",
   upload.fields([
@@ -37,6 +23,7 @@ router.post(
   ]),
   createProduct
 );
+
 router.put(
   "/:id",
   upload.fields([
@@ -45,6 +32,7 @@ router.put(
   ]),
   updateProduct
 );
+
 router.delete("/:id", deleteProduct);
 
 export default router;

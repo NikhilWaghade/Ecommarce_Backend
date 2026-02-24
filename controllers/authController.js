@@ -1,47 +1,72 @@
-import Admin from '../models/Admin.js';
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import {
+  createAdmin,
+  findAdminByEmail,
+  matchPassword,
+} from "../models/adminModel.js";
 
+// Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: "7d",
   });
 };
 
-// @desc    Register new admin
-export const adminSignup = async (req, res) => {
-  const { name, email, password } = req.body;
+// REGISTER ADMIN
+export async function registerAdmin(req, res) {
+  try {
+    const { name, email, password } = req.body;
 
-  const adminExists = await Admin.findOne({ email });
-  if (adminExists) return res.status(400).json({ message: 'Admin already exists' });
+    const existing = await findAdminByEmail(email);
 
-  const admin = await Admin.create({ name, email, password });
+    if (existing) {
+      return res.status(400).json({
+        message: "Admin already exists",
+      });
+    }
 
-  if (admin) {
-    res.status(201).json({
-      _id: admin._id,
-      name: admin.name,
-      email: admin.email,
-      token: generateToken(admin._id),
+    const admin = await createAdmin({ name, email, password });
+
+    return res.status(201).json({
+      message: "Admin registered successfully",
+      admin: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+      },
+      token: generateToken(admin.id),
     });
-  } else {
-    res.status(400).json({ message: 'Invalid admin data' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
-};
+}
 
-// @desc    Auth admin & get token
-export const adminLogin = async (req, res) => {
-  const { email, password } = req.body;
+// LOGIN ADMIN
+export async function loginAdmin(req, res) {
+  try {
+    const { email, password } = req.body;
 
-  const admin = await Admin.findOne({ email });
+    const admin = await findAdminByEmail(email);
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
 
-  if (admin && (await admin.matchPassword(password))) {
-    res.json({
-      _id: admin._id,
-      name: admin.name,
-      email: admin.email,
-      token: generateToken(admin._id),
+    const isValid = await matchPassword(password, admin.password);
+
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    return res.status(200).json({
+      message: "Login successful",
+      admin: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+      },
+      token: generateToken(admin.id),
     });
-  } else {
-    res.status(401).json({ message: 'Invalid email or password' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
-};
+}
