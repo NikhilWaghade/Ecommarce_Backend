@@ -7,35 +7,61 @@ import {
   addReviewDB,
 } from "../models/productModel.js";
 
-// GET all products
+const BASE_URL = process.env.BASE_URL;
+
+// ============================
+// GET ALL PRODUCTS
+// ============================
 export const getAllProducts = async (req, res) => {
   const { data, error } = await getAllProductsDB();
+
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+
+  const products = data.map((product) => ({
+    ...product,
+    image: product.image
+      ? `${BASE_URL}/${product.image.replace(/\\/g, "/")}`
+      : null,
+    images: product.images
+      ? product.images.map((img) =>
+          `${BASE_URL}/${img.replace(/\\/g, "/")}`
+        )
+      : [],
+  }));
+
+  res.json(products);
 };
 
-// GET single product
+// ============================
+// GET SINGLE PRODUCT
+// ============================
 export const getProductById = async (req, res) => {
   const { data, error } = await getProductByIdDB(req.params.id);
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data) return res.status(404).json({ error: "Product not found" });
 
-  res.json(data);
+  const product = {
+    ...data,
+    image: data.image
+      ? `${BASE_URL}/${data.image.replace(/\\/g, "/")}`
+      : null,
+    images: data.images
+      ? data.images.map((img) =>
+          `${BASE_URL}/${img.replace(/\\/g, "/")}`
+        )
+      : [],
+  };
+
+  res.json(product);
 };
 
-// CREATE product
+// ============================
+// CREATE PRODUCT
+// ============================
 export const createProduct = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      price,
-      category,
-      stock,
-      brand,
-      // originalPrice,
-    } = req.body;
+    const { name, description, price, category, stock, brand } = req.body;
 
     const image = req.files?.image?.[0]?.path || null;
     const images = req.files?.images?.map((f) => f.path) || [];
@@ -47,7 +73,6 @@ export const createProduct = async (req, res) => {
       category,
       stock: Number(stock || 0),
       brand,
-      // originalPrice: Number(originalPrice || price || 0),
       image,
       images,
     });
@@ -64,18 +89,12 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// UPDATE product
+// ============================
+// UPDATE PRODUCT
+// ============================
 export const updateProduct = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      price,
-      category,
-      stock,
-      brand,
-      // originalPrice,
-    } = req.body;
+    const { name, description, price, category, stock, brand } = req.body;
 
     const updateData = {
       name: name || "",
@@ -84,7 +103,6 @@ export const updateProduct = async (req, res) => {
       category: category || "",
       stock: Number(stock || 0),
       brand: brand || "",
-      // originalPrice: Number(originalPrice || price || 0),
     };
 
     if (req.files?.image?.[0]) {
@@ -116,7 +134,9 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// DELETE product
+// ============================
+// DELETE PRODUCT
+// ============================
 export const deleteProduct = async (req, res) => {
   const { error } = await deleteProductDB(req.params.id);
 
@@ -125,7 +145,9 @@ export const deleteProduct = async (req, res) => {
   res.json({ message: "Product deleted successfully" });
 };
 
-// ADD review
+// ============================
+// ADD REVIEW
+// ============================
 export const addProductReview = async (req, res) => {
   try {
     const { user, rating, comment } = req.body;
