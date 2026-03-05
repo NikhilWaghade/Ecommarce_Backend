@@ -12,15 +12,7 @@ dotenv.config();
 const app = express();
 
 // =====================
-// ✅ Allowed Origins (Safe Version)
-// =====================
-const allowedOrigins = [
-  process.env.CLIENT_URL_DEV,
-  process.env.CLIENT_URL_PROD,
-].filter(Boolean); // removes undefined
-
-// =====================
-// ✅ CORS Setup (Robust)
+// ✅ CORS Setup
 // =====================
 app.use(
   cors({
@@ -36,7 +28,16 @@ app.use(
 // ✅ Middlewares
 // =====================
 app.use(express.json());
+
+// serve uploaded images
 app.use("/uploads", express.static("uploads"));
+
+// =====================
+// ✅ Root Route (Health Check)
+// =====================
+app.get("/", (req, res) => {
+  res.send("DND Footwear API running 🚀");
+});
 
 // =====================
 // ✅ Test Route
@@ -74,10 +75,7 @@ app.use((err, req, res, next) => {
 
   res.status(500).json({
     error: "Internal Server Error",
-    message:
-      process.env.NODE_ENV === "production"
-        ? err.message
-        : "Something went wrong",
+    message: err.message,
   });
 });
 
@@ -107,8 +105,8 @@ const server = app.listen(PORT, async () => {
 });
 
 // =====================
-//  Graceful Shutdown
-
+// ✅ Graceful Shutdown
+// =====================
 process.on("SIGINT", () => {
   console.log("👋 Shutting down server...");
   server.close(() => process.exit(0));
