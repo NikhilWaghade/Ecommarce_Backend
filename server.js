@@ -12,28 +12,22 @@ dotenv.config();
 const app = express();
 
 // =====================
-// ✅ Allowed Origins
+// ✅ Allowed Origins (Safe Version)
 // =====================
 const allowedOrigins = [
   process.env.CLIENT_URL_DEV,
   process.env.CLIENT_URL_PROD,
-];
+].filter(Boolean); // removes undefined
 
 // =====================
-// ✅ CORS Setup
+// ✅ CORS Setup (Robust)
 // =====================
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: [
+      "http://localhost:5173",
+      "https://dnd-footwear.vercel.app",
+    ],
     credentials: true,
   })
 );
@@ -81,7 +75,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     error: "Internal Server Error",
     message:
-      process.env.NODE_ENV === "development"
+      process.env.NODE_ENV === "production"
         ? err.message
         : "Something went wrong",
   });
@@ -113,8 +107,8 @@ const server = app.listen(PORT, async () => {
 });
 
 // =====================
-// ✅ Graceful Shutdown
-// =====================
+//  Graceful Shutdown
+
 process.on("SIGINT", () => {
   console.log("👋 Shutting down server...");
   server.close(() => process.exit(0));
