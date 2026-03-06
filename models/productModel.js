@@ -37,8 +37,6 @@ export const createProductDB = async (productData) => {
 }
 
 
-
-
 // Update product
 export const updateProductDB = async (id, updateData) => {
   const { data, error } = await supabase
@@ -63,14 +61,21 @@ export const deleteProductDB = async (id) => {
 
 // Add review
 export const addReviewDB = async (productId, review) => {
-  const { data, error } = await supabase
-    .from('reviews')
-    .insert([
-      {
-        product_id: normalizeId(productId), // 🔥 important
-        ...review,
-      },
-    ])
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert([
+        {
+          product_id: normalizeId(productId),
+          user: review.user,
+          rating: review.rating,
+          comment: review.comment,
+        },
+      ])
+      .select();
 
-  return { data, error }
-}
+    return { data, error };
+  } catch (err) {
+    return { data: null, error: err };
+  }
+};

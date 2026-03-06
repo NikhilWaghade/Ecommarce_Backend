@@ -151,18 +151,35 @@ export const deleteProduct = async (req, res) => {
 export const addProductReview = async (req, res) => {
   try {
     const { user, rating, comment } = req.body;
+    const productId = req.params.id;
 
-    const { error } = await addReviewDB(req.params.id, {
+    if (!user || !rating || !comment) {
+      return res.status(400).json({
+        message: "User, rating and comment are required",
+      });
+    }
+
+    const { data, error } = await addReviewDB(productId, {
       user,
       rating: Number(rating),
       comment,
     });
 
-    if (error)
-      return res.status(500).json({ message: "Failed to submit review" });
+    if (error) {
+      console.error("Supabase Error:", error);
+      return res.status(500).json({
+        message: "Failed to submit review",
+      });
+    }
 
-    res.json({ message: "Review added successfully" });
-  } catch {
-    res.status(500).json({ message: "Error adding review" });
+    res.status(201).json({
+      message: "Review added successfully",
+      review: data,
+    });
+  } catch (error) {
+    console.error("Controller Error:", error);
+    res.status(500).json({
+      message: "Error adding review",
+    });
   }
 };
